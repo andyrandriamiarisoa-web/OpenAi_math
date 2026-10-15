@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@theme {
+  --color-linen: #e6dfd2;
+  --color-ink: #1c1916;
+  --color-paper: #f7f3ec;
+  --color-muted: #6f675e;
+  --color-cinnabar: #b8432f;
+  --color-line: #d9d0c3;
+  --font-sans: "Outfit", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
+  --radius-card: 0.8rem;
+}
+
+@layer base {
+  html {
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--color-linen);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+.shell {
+  height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.board-dots {
+  background-color: var(--color-linen);
+  background-image: radial-gradient(color-mix(in oklab, var(--color-ink) 22%, var(--color-linen)) 1px, transparent 1px);
+  background-size: 22px 22px;
+  touch-action: none;
+  user-select: none;
+}
+
+.atlas-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.atlas-frame {
+  position: absolute;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--color-paper) 78%, transparent);
+  pointer-events: none;
+}
+
+.atlas-frame-label {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.atlas-node {
+  position: absolute;
+  width: 200px;
+  height: 76px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--color-ink) 12%, var(--color-paper));
+  background: var(--color-paper);
+  color: var(--color-ink);
+  text-align: left;
+  padding: 7px 8px 6px;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent);
+  transition: border-color 160ms ease, opacity 160ms ease;
+}
+
+.atlas-node:hover {
+  border-color: color-mix(in oklab, var(--color-ink) 35%, var(--color-paper));
+}
+
+.atlas-node.is-on {
+  border-color: var(--color-cinnabar);
+  box-shadow: 0 0 0 1px var(--color-cinnabar);
+}
+
+.atlas-node.is-dim {
+  opacity: 0.28;
+}
+
+.mark-ring,
+.mark-dot,
+.mark-half {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: none;
+}
+
+.mark-ring {
+  border: 1.5px solid var(--color-ink);
+}
+
+.mark-dot {
+  background: var(--color-ink);
+}
+
+.mark-half {
+  background: linear-gradient(90deg, var(--color-ink) 50%, transparent 50%);
+  border: 1.5px solid var(--color-ink);
+}
+
+.deep-tab {
+  width: 7px;
+  height: 7px;
+  background: var(--color-cinnabar);
+  flex: none;
+}
+
+.example-note {
+  border-left: 2px solid var(--color-cinnabar);
+  background: color-mix(in oklab, var(--color-cinnabar) 7%, var(--color-paper));
+}
+
+.sheet-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+}
+
+.view-root {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+.only-list,
+.only-canvas {
+  height: 100%;
+  min-width: 0;
+}
+@media (max-width: 1023px) {
+  .view-root[data-view="auto"] .only-canvas { display: none; }
+}
+@media (min-width: 1024px) {
+  .view-root[data-view="auto"] .only-list { display: none; }
+}
+.view-root[data-view="list"] .only-canvas { display: none; }
+.view-root[data-view="canvas"] .only-list { display: none; }
+
+.mobile-sheet {
+  transition: transform 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-node,
+  .mobile-sheet {
+    transition: none;
+  }
+}
