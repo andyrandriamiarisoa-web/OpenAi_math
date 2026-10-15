@@ -14,7 +14,7 @@ We are also exploring community-hosted repositories for these materials.
 The current catalogue contains 719 manuscripts organized into 372 families. A family groups related papers, which may include a principal result, companion arguments, consequences, or alternative proofs. Each family is classified by mathematical discipline.
 
 - Start with the [overview](overview.pdf) for descriptions of the families.
-- Open [Folio](folio/README.md) (`folio/`) to browse the 372 families on a canvas: plain-language cards, then an expert reading, filtered by nature, domain, complexity, and by problem age or manuscript date.
+- Open [Folio](folio/README.md) (`folio/`) to browse the 372 families on a canvas: plain-language cards, then an expert reading, filtered by nature, domain, complexity, and by problem age or manuscript date. Vercel deploy settings live in [`vercel.json`](vercel.json); leave the project root at the repository root.
 - Use the [manuscript map](CONTENTS.md) to find individual papers and their supporting materials.
 - The [`preprints/`](preprints/) directory contains PDFs, source files, and manuscript-specific citation and build instructions.
 - The [Lean library](lean/README.md) and [formalization catalogue](lean/formalization.yaml) describe the available formal proofs, their associated papers, and verification configurations. See the [Comparator instructions](lean/ComparatorChallenges/README.md) for additional checking instructions. The repository has ~42% top-line results formalized.

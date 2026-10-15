@@ -20,3 +20,11 @@ npm run dev
 ```
 
 Puis ouvrir l’adresse affichée. `npm run build` produit `dist/`.
+
+## Vercel
+
+Le dépôt se déploie sans changer le répertoire racine du projet. [`vercel.json`](../vercel.json), à la racine, installe et construit `folio/`, puis publie `folio/dist`. Node 22 (`.node-version`). Un commit qui ne touche pas `folio/` ne relance pas le build.
+
+Importer [le dépôt](https://github.com/andyrandriamiarisoa-web/OpenAi_math) dans Vercel et laisser le répertoire racine sur la racine du dépôt. Ne pas le fixer sur `folio` : ce n’est utile que si `folio/vercel.json` doit prendre le relais.
+
+Le clone fait environ 800 Mo à cause des manuscrits. Le premier déploiement peut être long. L’atlas lui-même ne publie que le site statique.
