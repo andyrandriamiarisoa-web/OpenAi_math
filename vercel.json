@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --prefix folio",
+  "buildCommand": "npm run build --prefix folio",
+  "outputDirectory": "folio/dist",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- folio vercel.json .node-version"
+}
