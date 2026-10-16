@@ -5,7 +5,7 @@ Atlas des **372 familles** de manuscrits de ce dépôt (719 articles). Toile fa�
 Deux lectures :
 
 - **Lecture** — une première passe en langage courant, sans présupposer le formalisme.
-- **Expert** — l’énoncé du manuscrit, puis, pour une vingtaine de familles, un exemple numérique ou physique et une piste d’application.
+- **Expert** — l'argument au tableau : définitions, ce qu'on savait, le pas de preuve, un calcul écrit. Le niveau visé est celui de la famille 130. La règle d'écriture est dans [skills/fiche-didactique/SKILL.md](skills/fiche-didactique/SKILL.md). Les formules sont rendues par KaTeX.
 
 Classements : nature, domaine, complexité pédagogique, et deux axes de date (âge du problème, date du manuscrit). L’interface est bilingue français / anglais.
 

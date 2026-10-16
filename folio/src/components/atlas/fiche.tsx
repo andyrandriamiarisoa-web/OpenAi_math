@@ -16,6 +16,7 @@ import { useAtlas } from "@/lib/atlas-store";
 import { cn } from "@/lib/cn";
 import { ExternalLink, X } from "lucide-react";
 import { Diagram } from "./diagrams";
+import { MathText } from "./math-text";
 
 function Paras({ text }: { text: string }) {
   return (
@@ -26,7 +27,7 @@ function Paras({ text }: { text: string }) {
         .filter(Boolean)
         .map((p) => (
           <p key={p.slice(0, 48)} className="text-[15px] leading-relaxed text-ink">
-            {p}
+            <MathText text={p} />
           </p>
         ))}
     </div>
@@ -42,7 +43,9 @@ function Lines({ text, ordered }: { text: string; ordered?: boolean }) {
   return (
     <Tag className={cn("space-y-2 text-[15px] leading-relaxed", ordered ? "list-decimal pl-4" : "list-disc pl-4")}>
       {rows.map((row) => (
-        <li key={row.slice(0, 60)}>{row}</li>
+        <li key={row.slice(0, 60)}>
+          <MathText text={row} />
+        </li>
       ))}
     </Tag>
   );
@@ -126,7 +129,9 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
                 {doc.formula ? (
                   <section className="space-y-2">
                     <Kicker>{t(lang, "formula")}</Kicker>
-                    <p className="font-display text-lg leading-snug text-ink">{doc.formula}</p>
+                    <div className="overflow-x-auto text-ink">
+                      <MathText text={doc.formula} display />
+                    </div>
                   </section>
                 ) : null}
                 <section className="space-y-2">
@@ -147,7 +152,9 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
                 {doc.formula ? (
                   <section className="space-y-2">
                     <Kicker>{t(lang, "formula")}</Kicker>
-                    <p className="font-display text-lg leading-snug text-ink">{doc.formula}</p>
+                    <div className="overflow-x-auto text-ink">
+                      <MathText text={doc.formula} display />
+                    </div>
                   </section>
                 ) : null}
                 <section className="space-y-2">
