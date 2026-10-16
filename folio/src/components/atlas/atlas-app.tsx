@@ -1,16 +1,65 @@
 import { families } from "@/data/families";
-import { aboutBody, complexityLabel, domainLabel, frameTitle, groupLabel, legendBody, t, tx, yearLabel, formatDay } from "@/data/i18n";
+import { aboutBody, domainLabel, groupLabel, legendBody, natureLabel, t, tx } from "@/data/i18n";
 import type { GroupBy } from "@/data/types";
 import { useAtlas } from "@/lib/atlas-store";
 import { groupKey } from "@/lib/layout";
-import { BookOpen, Info, Languages, LayoutGrid, List, Search, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { BookOpen, ChevronLeft, Info, Languages, LayoutGrid, List, Menu, Search, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Board, useMatched } from "./board";
 import { FicheBody, FichePanel } from "./fiche";
 import { Filters } from "./filters";
+import { TreeList } from "./tree-list";
 import { cn } from "@/lib/cn";
+import type { Family } from "@/data/types";
 
 const GROUPS: GroupBy[] = ["domain", "nature", "complexity", "era"];
+
+function FicheSheet({ family, onClose }: { family: Family; onClose: () => void }) {
+  const origin = useRef<number | null>(null);
+  const drag = useRef(0);
+  const [dy, setDy] = useState(0);
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    origin.current = e.clientY;
+    drag.current = 0;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (origin.current == null) return;
+    const next = Math.max(0, e.clientY - origin.current);
+    drag.current = next;
+    setDy(next);
+  };
+  const onPointerUp = () => {
+    if (drag.current > 72) onClose();
+    origin.current = null;
+    drag.current = 0;
+    setDy(0);
+  };
+
+  return (
+    <div
+      className={cn(
+        "mobile-sheet fixed inset-x-0 bottom-0 z-30 max-h-[78dvh] overflow-y-auto rounded-t-2xl border border-line bg-paper lg:hidden",
+        dy === 0 && "translate-y-0",
+      )}
+      style={dy ? { transform: `translateY(${dy}px)`, transition: "none" } : undefined}
+    >
+      <div
+        className="flex touch-none justify-center py-3"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <span className="h-1.5 w-12 rounded-full bg-line" />
+      </div>
+      <div className="sheet-safe">
+        <FicheBody family={family} onClose={onClose} />
+      </div>
+    </div>
+  );
+}
 
 export function AtlasApp() {
   const lang = useAtlas((s) => s.lang);
@@ -30,11 +79,17 @@ export function AtlasApp() {
   const setFiltersOpen = useAtlas((s) => s.setFiltersOpen);
   const selectedId = useAtlas((s) => s.selectedId);
   const select = useAtlas((s) => s.select);
+  const domains = useAtlas((s) => s.domains);
+  const natures = useAtlas((s) => s.natures);
+  const toggleDomain = useAtlas((s) => s.toggleDomain);
+  const toggleNature = useAtlas((s) => s.toggleNature);
   const requestFit = useAtlas((s) => s.requestFit);
   const matched = useMatched(families);
   const selected = families.find((f) => f.id === selectedId) ?? null;
   const [narrow, setNarrow] = useState(false);
   const [sortDate, setSortDate] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const showingList = list === "list" || (list === "auto" && narrow);
 
   const ordered = useMemo(() => {
@@ -89,7 +144,14 @@ export function AtlasApp() {
       if (typing) return;
       if (e.key === "/" || (e.key === "f" && (e.metaKey || e.ctrlKey))) {
         e.preventDefault();
-        document.getElementById("folio-search")?.focus();
+        if (window.matchMedia("(max-width: 1023px)").matches) {
+          select(null);
+          setFiltersOpen(false);
+          setSearching(true);
+          setList("list");
+        } else {
+          document.getElementById("folio-search")?.focus();
+        }
       }
       if (e.key === "1") setLevel("plain");
       if (e.key === "2") setLevel("expert");
@@ -97,91 +159,147 @@ export function AtlasApp() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [requestFit, select, setAbout, setFiltersOpen, setLevel]);
+  }, [requestFit, select, setAbout, setFiltersOpen, setLevel, setList]);
 
   return (
     <div className="shell flex flex-col bg-linen text-ink">
-      <header className="flex items-center gap-2 border-b border-line bg-paper px-3 py-2">
-        <div className="flex items-center gap-2 pr-1">
-          <span className="grid size-8 place-items-center bg-ink text-paper">
-            <BookOpen className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="font-display text-lg leading-none">Folio</p>
-            <p className="hidden text-xs text-muted sm:block">{t(lang, "tag")}</p>
+      <header className="border-b border-line bg-paper">
+        <div className="hidden items-center gap-2 px-3 py-2 lg:flex">
+          <div className="flex items-center gap-2 pr-1">
+            <span className="grid size-8 place-items-center bg-ink text-paper">
+              <BookOpen className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-display text-lg leading-none">Folio</p>
+              <p className="text-xs text-muted">{t(lang, "tag")}</p>
+            </div>
           </div>
+          <div className="flex items-center gap-1">
+            {GROUPS.map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setGroupBy(g)}
+                className={cn("rounded-full px-3 py-2 text-xs", groupBy === g ? "bg-ink text-paper" : "text-muted hover:text-ink")}
+              >
+                {groupLabel(g, lang)}
+              </button>
+            ))}
+          </div>
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-linen px-3">
+            <Search className="size-4 shrink-0 text-muted" />
+            <input
+              id="folio-search"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                select(null);
+              }}
+              placeholder={t(lang, "search")}
+              className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted"
+            />
+            {query ? (
+              <button type="button" aria-label={t(lang, "close")} onClick={() => setQuery("")}>
+                <X className="size-4" />
+              </button>
+            ) : null}
+          </label>
+          <p className="text-xs text-muted tabular-nums">
+            {matched.length}/{families.length}
+          </p>
+          <button type="button" className="flex h-11 items-center rounded-full bg-linen px-3 text-xs" onClick={() => setLevel(level === "plain" ? "expert" : "plain")}>
+            {level === "plain" ? t(lang, "plain") : t(lang, "expert")}
+          </button>
+          <button type="button" className="grid size-11 place-items-center" aria-label={showingList ? t(lang, "canvas") : t(lang, "list")} onClick={() => setList(showingList ? "canvas" : "list")}>
+            {showingList ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
+          </button>
+          <button type="button" className="grid size-11 place-items-center" aria-label={lang === "fr" ? "English" : "Français"} onClick={() => setLang(lang === "fr" ? "en" : "fr")}>
+            <Languages className="size-4" />
+          </button>
+          <button type="button" className="grid size-11 place-items-center" aria-label={t(lang, "about")} onClick={() => setAbout(true)}>
+            <Info className="size-4" />
+          </button>
         </div>
 
-        <div className="hidden items-center gap-1 lg:flex">
-          {GROUPS.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGroupBy(g)}
-              className={cn(
-                "rounded-full px-3 py-2 text-xs",
-                groupBy === g ? "bg-ink text-paper" : "text-muted hover:text-ink",
-              )}
-            >
-              {groupLabel(g, lang)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 px-3 py-2 lg:hidden">
+          {searching ? (
+            <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-linen px-2">
+              <button
+                type="button"
+                aria-label={t(lang, "close")}
+                className="grid size-11 place-items-center"
+                onClick={() => setSearching(false)}
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <input
+                id="folio-search-mobile"
+                autoFocus
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  select(null);
+                }}
+                placeholder={t(lang, "search")}
+                className="h-11 w-full bg-transparent text-base outline-none placeholder:text-muted"
+              />
+              {query ? (
+                <button type="button" aria-label={t(lang, "reset")} className="grid size-11 place-items-center" onClick={() => setQuery("")}>
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </label>
+          ) : (
+            <>
+              <span className="grid size-8 shrink-0 place-items-center bg-ink text-paper">
+                <BookOpen className="size-4" />
+              </span>
+              <p className="font-display min-w-0 flex-1 text-lg leading-none">Folio</p>
+              <button
+                type="button"
+                className="grid size-11 place-items-center"
+                aria-label={t(lang, "search")}
+                onClick={() => {
+                  select(null);
+                  setFiltersOpen(false);
+                  setMenuOpen(false);
+                  setList("list");
+                  setSearching(true);
+                }}
+              >
+                <Search className="size-4" />
+              </button>
+              <button
+                type="button"
+                className={cn("grid size-11 place-items-center", menuOpen && "bg-linen")}
+                aria-label={t(lang, "menu")}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <Menu className="size-4" />
+              </button>
+            </>
+          )}
         </div>
-
-        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-linen px-3">
-          <Search className="size-4 shrink-0 text-muted" />
-          <input
-            id="folio-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t(lang, "search")}
-            className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted"
-          />
-          {query ? (
-            <button type="button" aria-label={t(lang, "close")} onClick={() => setQuery("")}>
-              <X className="size-4" />
+        {menuOpen && !searching ? (
+          <div className="flex items-center gap-1 border-t border-line px-2 py-1 lg:hidden">
+            <button type="button" className="grid size-11 place-items-center" aria-label={t(lang, "filters")} onClick={() => { setMenuOpen(false); setFiltersOpen(true); }}>
+              <SlidersHorizontal className="size-4" />
             </button>
-          ) : null}
-        </label>
-
-        <p className="hidden text-xs text-muted tabular-nums xl:block">
-          {matched.length}/{families.length}
-        </p>
-
-        <button
-          type="button"
-          className="grid size-11 place-items-center lg:hidden"
-          aria-label={t(lang, "filters")}
-          onClick={() => setFiltersOpen(true)}
-        >
-          <SlidersHorizontal className="size-4" />
-        </button>
-        <button
-          type="button"
-          className="hidden h-11 items-center rounded-full bg-linen px-3 text-xs lg:flex"
-          onClick={() => setLevel(level === "plain" ? "expert" : "plain")}
-        >
-          {level === "plain" ? t(lang, "plain") : t(lang, "expert")}
-        </button>
-        <button
-          type="button"
-          className="grid size-11 place-items-center"
-          aria-label={showingList ? t(lang, "canvas") : t(lang, "list")}
-          onClick={() => setList(showingList ? "canvas" : "list")}
-        >
-          {showingList ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
-        </button>
-        <button
-          type="button"
-          className="grid size-11 place-items-center"
-          aria-label={lang === "fr" ? "English" : "Français"}
-          onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-        >
-          <Languages className="size-4" />
-        </button>
-        <button type="button" className="grid size-11 place-items-center" aria-label={t(lang, "about")} onClick={() => setAbout(true)}>
-          <Info className="size-4" />
-        </button>
+            <button type="button" className="grid size-11 place-items-center" aria-label={showingList ? t(lang, "canvas") : t(lang, "list")} onClick={() => setList(showingList ? "canvas" : "list")}>
+              {showingList ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
+            </button>
+            <button type="button" className="grid size-11 place-items-center" aria-label={lang === "fr" ? "English" : "Français"} onClick={() => setLang(lang === "fr" ? "en" : "fr")}>
+              <Languages className="size-4" />
+            </button>
+            <button type="button" className="grid size-11 place-items-center" aria-label={t(lang, "about")} onClick={() => { setMenuOpen(false); setAbout(true); }}>
+              <Info className="size-4" />
+            </button>
+            <button type="button" className="ml-auto h-11 rounded-full bg-linen px-3 text-xs" onClick={() => setLevel(level === "plain" ? "expert" : "plain")}>
+              {level === "plain" ? t(lang, "plain") : t(lang, "expert")}
+            </button>
+          </div>
+        ) : null}
       </header>
 
       <div className="flex min-h-0 flex-1">
@@ -199,44 +317,36 @@ export function AtlasApp() {
                   {sortDate ? t(lang, "sortDate") : t(lang, "sortId")}
                 </button>
               </div>
+              {domains.length > 0 || natures.length > 0 ? (
+                <div className="flex gap-1.5 overflow-x-auto border-b border-line px-3 py-2">
+                  {domains.map((d) => (
+                    <button key={d} type="button" onClick={() => toggleDomain(d)} className="shrink-0 rounded-full bg-ink px-2.5 py-1 text-xs text-paper">
+                      {tx(lang, domainLabel[d])} ×
+                    </button>
+                  ))}
+                  {natures.map((n) => (
+                    <button key={n} type="button" onClick={() => toggleNature(n)} className="shrink-0 rounded-full bg-linen px-2.5 py-1 text-xs text-ink">
+                      {tx(lang, natureLabel[n])} ×
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {ordered.length === 0 ? (
                 <p className="px-4 py-8 text-sm text-muted">{t(lang, "empty")}</p>
               ) : (
-                <ul>
-                  {ordered.map((f) => (
-                    <li key={f.id} className="border-b border-line">
-                      <button
-                        type="button"
-                        onClick={() => select(f.id)}
-                        className={cn(
-                          "flex w-full items-start gap-3 px-4 py-3 text-left",
-                          f.id === selectedId ? "bg-linen" : "hover:bg-linen",
-                        )}
-                      >
-                        <span className="w-8 shrink-0 text-xs text-muted tabular-nums">{f.id}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm">{lang === "fr" ? f.titleFr : f.titleEn}</span>
-                          <span className="mt-1 block text-xs leading-relaxed text-muted line-clamp-2">
-                            {lang === "fr" ? f.plainFr : f.plainEn}
-                          </span>
-                          <span className="mt-1 block text-xs text-muted">
-                            {frameTitle(groupKey(f, groupBy, axis), lang)}
-                            {" · "}
-                            {tx(lang, domainLabel[f.domain])}
-                            {" · "}
-                            {tx(lang, complexityLabel[f.complexity])}
-                            {" · "}
-                            {axis === "problem"
-                              ? yearLabel(f.problemYear, f.yearKnown, lang)
-                              : f.manuscriptDate
-                                ? formatDay(f.manuscriptDate, lang)
-                                : "—"}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <TreeList
+                  families={ordered}
+                  lang={lang}
+                  groupBy={groupBy}
+                  axis={axis}
+                  sortDate={sortDate}
+                  selectedId={selectedId}
+                  query={query}
+                  onSelect={(id) => {
+                    setSearching(false);
+                    select(id);
+                  }}
+                />
               )}
             </div>
           <div className="only-canvas relative">
@@ -254,16 +364,7 @@ export function AtlasApp() {
         </aside>
       </div>
 
-      <div
-        className={cn(
-          "mobile-sheet fixed inset-x-0 bottom-0 z-30 max-h-[78dvh] overflow-y-auto rounded-t-2xl border border-line bg-paper lg:hidden",
-          selected ? "translate-y-0" : "pointer-events-none translate-y-full",
-        )}
-      >
-        <div className="sheet-safe">
-          {selected ? <FicheBody family={selected} onClose={() => select(null)} /> : null}
-        </div>
-      </div>
+      {selected ? <FicheSheet family={selected} onClose={() => select(null)} /> : null}
 
       {filtersOpen ? (
         <div className="fixed inset-0 z-40 bg-ink/40 lg:hidden" onClick={() => setFiltersOpen(false)}>

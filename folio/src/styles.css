@@ -144,6 +144,13 @@
   background: color-mix(in oklab, var(--color-cinnabar) 7%, var(--color-paper));
 }
 
+.fold > summary {
+  list-style: none;
+}
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
 .sheet-safe {
   padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
 }

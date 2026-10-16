@@ -120,10 +120,17 @@ const UI = {
   question: { fr: "La question", en: "The question" },
   picture: { fr: "Image", en: "Picture" },
   shown: { fr: "Ce que le manuscrit affirme", en: "What the manuscript asserts" },
-  example: { fr: "Exemple chiffré", en: "Worked example" },
+  example: { fr: "Exemple pour voir", en: "An example, to see it" },
   inspiration: { fr: "Piste", en: "A reason to look" },
   claim: { fr: "Phrase du dépôt", en: "Repository sentence" },
   papers: { fr: "Manuscrits", en: "Manuscripts" },
+  related: { fr: "Familles proches", en: "Nearby families" },
+  uses: { fr: "À quoi ça peut servir", en: "Where this question comes back" },
+  statement: { fr: "Au tableau", en: "At the board" },
+  known: { fr: "Ce qu'on savait", en: "What was already known" },
+  adds: { fr: "Ce que le papier ajoute", en: "What the paper adds" },
+  plan: { fr: "Le fil", en: "The line of the argument" },
+  formula: { fr: "En une formule", en: "In one formula" },
   lean: { fr: "Lean", en: "Lean" },
   open: { fr: "Ouvrir le PDF", en: "Open PDF" },
   legendTitle: { fr: "Comment lire la toile", en: "How to read the canvas" },
@@ -131,6 +138,12 @@ const UI = {
   sortDate: { fr: "Date", en: "Date" },
   from: { fr: "De", en: "From" },
   to: { fr: "À", en: "To" },
+  menu: { fr: "Menu", en: "Menu" },
+  combine: {
+    fr: "Plusieurs cases à la fois : on garde chaque famille qui est dans l'un des choix.",
+    en: "Tick several at once: every family in any ticked box stays in the list.",
+  },
+  undatedGroup: { fr: "Sans date", en: "Undated" },
 } as const;
 
 export type UiKey = keyof typeof UI;
@@ -156,8 +169,8 @@ export const legendBody: CopyBlock = {
 };
 
 export const aboutBody: CopyBlock = {
-  fr: "Folio parcourt les 372 familles du dépôt OpenAi_math : 719 manuscrits produits par un modèle interne, à des stades divers de vérification. Ce n'est pas un catalogue de modèles appliqués, et une fiche ne certifie pas la preuve. La nature, le domaine et l'âge du problème sont des repères de lecture reconstruits ici — l'âge connu est distingué de l'estimation. Les manuscrits datent de septembre et octobre 2026. Vingt fiches vont plus loin, avec un exemple numérique ou physique.",
-  en: "Folio browses the 372 families in the OpenAi_math repository: 719 manuscripts produced by an internal model, at various stages of verification. This is not a catalog of applied models, and a fiche does not certify the proof. Nature, domain, and the age of the problem are reading guides built here — a known year is distinguished from an estimate. The manuscripts are dated September and October 2026. Twenty fiches go further, with a numerical or physical example.",
+  fr: "Folio parcourt les 372 familles du dépôt OpenAi_math : 719 manuscrits produits par un modèle interne, à des stades divers de vérification. Ce n'est pas un catalogue de modèles appliqués, et une fiche ne certifie pas la preuve. Chaque famille a deux lectures : une explication en langage courant, avec un dessin, puis le plan du manuscrit, une formule quand elle se dit, et un exemple pour voir. La nature, le domaine et l'âge du problème sont des repères de lecture reconstruits ici.",
+  en: "Folio browses the 372 families in the OpenAi_math repository: 719 manuscripts produced by an internal model, at various stages of verification. This is not a catalog of applied models, and a fiche does not certify the proof. Each family has two readings: a plain-language explanation with a drawing, then the plan of the manuscript, a formula when it can be said, and an example to see it. Nature, domain, and the age of the problem are reading guides built here.",
 };
 
 export const repoUrl = "https://github.com/andyrandriamiarisoa-web/OpenAi_math";
