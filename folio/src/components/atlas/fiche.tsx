@@ -1,6 +1,6 @@
-import { DEEP } from "@/data/deep";
+import { FICHES } from "@/data/fiches";
+import { families } from "@/data/families";
 import {
-  complexityHint,
   complexityLabel,
   domainLabel,
   formatDay,
@@ -15,23 +15,52 @@ import type { Family, Lang } from "@/data/types";
 import { useAtlas } from "@/lib/atlas-store";
 import { cn } from "@/lib/cn";
 import { ExternalLink, X } from "lucide-react";
+import { Diagram } from "./diagrams";
 
-function Block({ kicker, children }: { kicker: string; children: string }) {
+function Paras({ text }: { text: string }) {
   return (
-    <section className="space-y-1">
-      <h3 className="text-xs tracking-widest text-muted uppercase">{kicker}</h3>
-      <p className="text-sm leading-relaxed text-ink">{children}</p>
-    </section>
+    <div className="space-y-3">
+      {text
+        .split(/\n\n+/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => (
+          <p key={p.slice(0, 48)} className="text-[15px] leading-relaxed text-ink">
+            {p}
+          </p>
+        ))}
+    </div>
   );
+}
+
+function Lines({ text, ordered }: { text: string; ordered?: boolean }) {
+  const rows = text
+    .split("\n")
+    .map((l) => l.replace(/^[-•]\s*/, "").trim())
+    .filter(Boolean);
+  const Tag = ordered ? "ol" : "ul";
+  return (
+    <Tag className={cn("space-y-2 text-[15px] leading-relaxed", ordered ? "list-decimal pl-4" : "list-disc pl-4")}>
+      {rows.map((row) => (
+        <li key={row.slice(0, 60)}>{row}</li>
+      ))}
+    </Tag>
+  );
+}
+
+function Kicker({ children }: { children: string }) {
+  return <h3 className="text-xs tracking-widest text-muted uppercase">{children}</h3>;
 }
 
 export function FicheBody({ family, onClose }: { family: Family; onClose?: () => void }) {
   const lang = useAtlas((s) => s.lang);
   const level = useAtlas((s) => s.level);
   const setLevel = useAtlas((s) => s.setLevel);
-  const deep = DEEP[family.id];
+  const select = useAtlas((s) => s.select);
+  const doc = FICHES[family.id];
   const title = lang === "fr" ? family.titleFr : family.titleEn;
   const alt = lang === "fr" ? family.titleEn : family.titleFr;
+  const pick = (fr: string, en: string) => (lang === "fr" ? fr : en);
 
   return (
     <article className="flex h-full flex-col">
@@ -40,7 +69,6 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
           <p className="text-xs tracking-widest text-muted uppercase tabular-nums">
             {lang === "fr" ? "Famille" : "Family"} {family.id}
             {family.lean ? ` · ${t(lang, "lean")}` : ""}
-            {deep ? ` · ${t(lang, "example")}` : ""}
           </p>
           <h2 className="font-display mt-1 text-2xl leading-tight text-ink">{title}</h2>
           {alt !== title ? <p className="mt-1 text-xs text-muted">{alt}</p> : null}
@@ -56,20 +84,14 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
         <button
           type="button"
           onClick={() => setLevel("plain")}
-          className={cn(
-            "min-h-11 flex-1 rounded-full text-sm",
-            level === "plain" ? "bg-ink text-paper" : "bg-linen text-ink",
-          )}
+          className={cn("min-h-11 flex-1 rounded-full text-sm", level === "plain" ? "bg-ink text-paper" : "bg-linen text-ink")}
         >
           {t(lang, "plain")}
         </button>
         <button
           type="button"
           onClick={() => setLevel("expert")}
-          className={cn(
-            "min-h-11 flex-1 rounded-full text-sm",
-            level === "expert" ? "bg-ink text-paper" : "bg-linen text-ink",
-          )}
+          className={cn("min-h-11 flex-1 rounded-full text-sm", level === "expert" ? "bg-ink text-paper" : "bg-linen text-ink")}
         >
           {t(lang, "expert")}
         </button>
@@ -81,7 +103,6 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
           <span className="rounded-full bg-linen px-2 py-1 text-xs">{tx(lang, domainLabel[family.domain])}</span>
           <span className="rounded-full bg-linen px-2 py-1 text-xs">{tx(lang, complexityLabel[family.complexity])}</span>
         </div>
-        <p className="text-xs leading-relaxed text-muted">{tx(lang, complexityHint[family.complexity])}</p>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-xs text-muted">{t(lang, "problem")}</dt>
@@ -89,47 +110,99 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
           </div>
           <div>
             <dt className="text-xs text-muted">{t(lang, "manuscript")}</dt>
-            <dd className="tabular-nums">
-              {family.manuscriptDate ? formatDay(family.manuscriptDate, lang) : "—"}
-            </dd>
+            <dd className="tabular-nums">{family.manuscriptDate ? formatDay(family.manuscriptDate, lang) : "—"}</dd>
           </div>
         </dl>
 
-        {level === "plain" ? (
-          deep ? (
-            <>
-              <Block kicker={t(lang, "question")} children={deep.question[lang]} />
-              <Block kicker={t(lang, "picture")} children={deep.picture[lang]} />
-            </>
-          ) : (
-            <p className="text-sm leading-relaxed">{lang === "fr" ? family.plainFr : family.plainEn}</p>
-          )
-        ) : (
+        {doc ? (
           <>
-            {deep ? (
+            <figure className="space-y-2">
+              <Diagram kind={doc.diagram} />
+              <figcaption className="text-xs leading-relaxed text-muted">{pick(doc.captionFr, doc.captionEn)}</figcaption>
+            </figure>
+            {level === "plain" ? (
               <>
-                <Block kicker={t(lang, "shown")} children={deep.shown[lang]} />
-                <section className="example-note space-y-1 px-3 py-3">
-                  <h3 className="text-xs tracking-widest text-cinnabar uppercase">{t(lang, "example")}</h3>
-                  <p className="text-sm leading-relaxed">{deep.example[lang]}</p>
+                <Paras text={pick(doc.storyFr, doc.storyEn)} />
+                {doc.formula ? (
+                  <section className="space-y-2">
+                    <Kicker>{t(lang, "formula")}</Kicker>
+                    <p className="font-display text-lg leading-snug text-ink">{doc.formula}</p>
+                  </section>
+                ) : null}
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "plan")}</Kicker>
+                  <Lines text={pick(doc.planFr, doc.planEn)} ordered />
                 </section>
-                <Block kicker={t(lang, "inspiration")} children={deep.inspiration[lang]} />
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "uses")}</Kicker>
+                  <Lines text={pick(doc.usesFr, doc.usesEn)} />
+                </section>
               </>
             ) : (
               <>
-                <p className="text-sm leading-relaxed">{lang === "fr" ? family.expertFr : family.expertEn}</p>
-                <Block kicker={t(lang, "inspiration")} children={lang === "fr" ? family.sparkFr : family.sparkEn} />
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "statement")}</Kicker>
+                  <Paras text={pick(doc.statementFr, doc.statementEn)} />
+                </section>
+                {doc.formula ? (
+                  <section className="space-y-2">
+                    <Kicker>{t(lang, "formula")}</Kicker>
+                    <p className="font-display text-lg leading-snug text-ink">{doc.formula}</p>
+                  </section>
+                ) : null}
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "known")}</Kicker>
+                  <Paras text={pick(doc.knownFr, doc.knownEn)} />
+                </section>
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "adds")}</Kicker>
+                  <Paras text={pick(doc.addsFr, doc.addsEn)} />
+                </section>
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "plan")}</Kicker>
+                  <Lines text={pick(doc.planFr, doc.planEn)} ordered />
+                </section>
+                <section className="example-note space-y-2 px-3 py-3">
+                  <Kicker>{t(lang, "example")}</Kicker>
+                  <Paras text={pick(doc.exampleFr, doc.exampleEn)} />
+                </section>
+                <section className="space-y-2">
+                  <Kicker>{t(lang, "inspiration")}</Kicker>
+                  <Paras text={pick(doc.sparkFr, doc.sparkEn)} />
+                </section>
               </>
             )}
-            <details className="text-sm">
-              <summary className="cursor-pointer text-xs tracking-widest text-muted uppercase">{t(lang, "claim")}</summary>
-              <p className="mt-2 leading-relaxed text-muted">{family.claim}</p>
-            </details>
+            {doc.related.length > 0 ? (
+              <section className="space-y-2">
+                <Kicker>{t(lang, "related")}</Kicker>
+                <ul className="flex flex-col gap-1">
+                  {doc.related.map((id) => {
+                    const other = families.find((f) => f.id === id);
+                    if (!other) return null;
+                    const label = lang === "fr" ? other.titleFr : other.titleEn;
+                    return (
+                      <li key={id}>
+                        <button type="button" onClick={() => select(id)} className="text-left text-sm text-ink underline decoration-line underline-offset-2">
+                          {id} · {label}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+          </>
+        ) : level === "plain" ? (
+          <p className="text-[15px] leading-relaxed">{pick(family.plainFr, family.plainEn)}</p>
+        ) : (
+          <>
+            <p className="text-[15px] leading-relaxed">{pick(family.expertFr, family.expertEn)}</p>
+            <p className="text-sm leading-relaxed text-muted">{pick(family.sparkFr, family.sparkEn)}</p>
           </>
         )}
 
         <section className="space-y-2 border-t border-line pt-3">
-          <h3 className="text-xs tracking-widest text-muted uppercase">{t(lang, "papers")}</h3>
+          <Kicker>{t(lang, "papers")}</Kicker>
           <ul className="space-y-2">
             {family.pdfs.map((pdf) => (
               <li key={pdf.href}>
@@ -146,12 +219,7 @@ export function FicheBody({ family, onClose }: { family: Family; onClose?: () =>
             ))}
           </ul>
           {family.lean ? (
-            <a
-              href={`${repoUrl}/blob/main/lean/docs/${family.id}.md`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex text-sm text-cinnabar underline underline-offset-2"
-            >
+            <a href={`${repoUrl}/blob/main/lean/docs/${family.id}.md`} target="_blank" rel="noreferrer" className="inline-flex text-sm text-cinnabar underline underline-offset-2">
               {t(lang, "lean")}
             </a>
           ) : null}

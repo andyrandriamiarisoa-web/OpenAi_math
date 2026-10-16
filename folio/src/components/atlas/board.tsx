@@ -1,5 +1,5 @@
 import { frameTitle, t, tx, complexityLabel } from "@/data/i18n";
-import { DEEP } from "@/data/deep";
+import { FICHES } from "@/data/fiches";
 import type { Family } from "@/data/types";
 import { useAtlas } from "@/lib/atlas-store";
 import { CARD_H, CARD_W, layoutWorld, type WorldNode } from "@/lib/layout";
@@ -33,7 +33,7 @@ function matchesNode(
   if (state.natures.length && !state.natures.includes(family.nature)) return false;
   if (state.domains.length && !state.domains.includes(family.domain)) return false;
   if (state.complexities.length && !state.complexities.includes(family.complexity)) return false;
-  if (state.deepOnly && !DEEP[family.id]) return false;
+  if (state.deepOnly && !FICHES[family.id]?.numeric) return false;
   if (state.leanOnly && !family.lean) return false;
   if (state.axis === "problem") {
     if (family.problemYear == null) return state.includeUndated;
@@ -279,7 +279,7 @@ export function Board({ families }: { families: Family[] }) {
               <span className="flex items-center justify-between gap-1">
                 <span className="text-xs tabular-nums text-muted">{node.family.id}</span>
                 <span className="flex items-center gap-1">
-                  {DEEP[node.family.id] ? <span className="deep-tab" aria-hidden /> : null}
+                  {FICHES[node.family.id]?.numeric ? <span className="deep-tab" aria-hidden /> : null}
                   <span
                     className={
                       node.family.complexity === "lecture"

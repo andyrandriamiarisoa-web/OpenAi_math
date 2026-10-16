@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { COMPLEXITIES, DOMAINS, NATURES, type GroupBy } from "@/data/types";
 import { complexityLabel, domainLabel, groupLabel, natureLabel, t, tx } from "@/data/i18n";
 import { dateExtent, dateTicks, useAtlas, yearExtent } from "@/lib/atlas-store";
@@ -26,6 +27,18 @@ function Chip({
     >
       {label}
     </button>
+  );
+}
+
+function Fold({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <details className="fold border-b border-line">
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
+        <span className="text-xs tracking-widest text-muted uppercase">{title}</span>
+        {hint ? <span className="text-xs text-ink tabular-nums">{hint}</span> : null}
+      </summary>
+      <div className="pb-3">{children}</div>
+    </details>
   );
 }
 
@@ -69,35 +82,33 @@ export function Filters({ onNavigate }: { onNavigate?: () => void }) {
         </button>
       </div>
 
-      <fieldset>
-        <legend className="mb-2 text-xs tracking-widest text-muted uppercase">{t(lang, "group")}</legend>
+    <div className="flex flex-col">
+      <Fold title={t(lang, "group")}>
         <div className="flex flex-wrap gap-1.5">
           {groups.map((g) => (
             <Chip key={g} on={group === g} label={groupLabel(g, lang)} onClick={() => setGroupBy(g)} />
           ))}
         </div>
-      </fieldset>
+      </Fold>
 
-      <fieldset>
-        <legend className="mb-2 text-xs tracking-widest text-muted uppercase">{t(lang, "domain")}</legend>
+      <Fold title={t(lang, "domain")} hint={domains.length ? String(domains.length) : undefined}>
+        <p className="mb-2 text-xs leading-relaxed text-muted">{t(lang, "combine")}</p>
         <div className="flex flex-wrap gap-1.5">
           {DOMAINS.map((d) => (
             <Chip key={d} on={domains.includes(d)} label={tx(lang, domainLabel[d])} onClick={() => toggleDomain(d)} />
           ))}
         </div>
-      </fieldset>
+      </Fold>
 
-      <fieldset>
-        <legend className="mb-2 text-xs tracking-widest text-muted uppercase">{t(lang, "nature")}</legend>
+      <Fold title={t(lang, "nature")} hint={natures.length ? String(natures.length) : undefined}>
         <div className="flex flex-wrap gap-1.5">
           {NATURES.map((n) => (
             <Chip key={n} on={natures.includes(n)} label={tx(lang, natureLabel[n])} onClick={() => toggleNature(n)} />
           ))}
         </div>
-      </fieldset>
+      </Fold>
 
-      <fieldset>
-        <legend className="mb-2 text-xs tracking-widest text-muted uppercase">{t(lang, "complexity")}</legend>
+      <Fold title={t(lang, "complexity")} hint={complexities.length ? String(complexities.length) : undefined}>
         <div className="flex flex-wrap gap-1.5">
           {COMPLEXITIES.map((c) => (
             <Chip
@@ -108,10 +119,9 @@ export function Filters({ onNavigate }: { onNavigate?: () => void }) {
             />
           ))}
         </div>
-      </fieldset>
+      </Fold>
 
-      <fieldset>
-        <legend className="mb-2 text-xs tracking-widest text-muted uppercase">{t(lang, "axis")}</legend>
+      <Fold title={t(lang, "axis")}>
         <div className="grid grid-cols-2 gap-1 rounded-full bg-linen p-1">
           <button
             type="button"
@@ -198,7 +208,7 @@ export function Filters({ onNavigate }: { onNavigate?: () => void }) {
           />
           {t(lang, "undated")}
         </label>
-      </fieldset>
+      </Fold>
 
       <div className="flex flex-col gap-2 text-sm">
         <label className="flex items-center gap-2">
@@ -210,6 +220,7 @@ export function Filters({ onNavigate }: { onNavigate?: () => void }) {
           {t(lang, "leanOnly")}
         </label>
       </div>
+    </div>
     </div>
   );
 }
